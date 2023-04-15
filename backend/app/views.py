@@ -130,8 +130,7 @@ class SaleViewSet(viewsets.ModelViewSet):
         barcode = request.query_params.get('barcode')
         from_time = request.query_params.get('fromTime')
         to_time = request.query_params.get('toTime')
-        make_kwargs(barcode, from_time, to_time, is_sale=True)
-        queryset = self.filter_queryset(self.get_queryset()).filter(**kwargs)
+        queryset = self.filter_queryset(self.get_queryset()).filter(**make_kwargs(barcode, from_time, to_time, is_sale=True))
 
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -184,8 +183,7 @@ class SupplyViewSet(viewsets.ModelViewSet):
         barcode = request.query_params.get('barcode')
         from_time = request.query_params.get('fromTime')
         to_time = request.query_params.get('toTime')
-        make_kwargs(barcode, from_time, to_time, is_sale=False)
-        queryset = self.filter_queryset(self.get_queryset()).filter(**kwargs)
+        queryset = self.filter_queryset(self.get_queryset()).filter(**make_kwargs(barcode, from_time, to_time, is_sale=False))
 
         page = self.paginate_queryset(queryset)
         if page is not None:

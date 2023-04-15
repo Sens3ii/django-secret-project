@@ -5,7 +5,7 @@ services:
         restart: always
         image: nginx:1.23-alpine
         ports:
-            - 80:80
+            - "80:80"
         volumes:
             - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
             - static_volume:/app/backend/django_static
@@ -18,7 +18,7 @@ services:
         volumes:
             - static_volume:/app/backend/django_static
         expose:
-            - 8000:8888
+            - 8888:8000
         environment:
             DEBUG: "True"
             CELERY_BROKER_URL: "redis://redis:6379/0"

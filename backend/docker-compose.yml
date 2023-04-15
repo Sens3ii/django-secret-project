@@ -12,7 +12,7 @@ services:
     server:
         restart: unless-stopped
         build:
-            context: ../../ # context must include `requirements.txt`
+            context: ../ # context must include `requirements.txt`
             dockerfile: ./backend/docker/backend/Dockerfile
         entrypoint: /app/docker/backend/server-entrypoint.sh
         volumes:

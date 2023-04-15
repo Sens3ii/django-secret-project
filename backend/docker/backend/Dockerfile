@@ -8,6 +8,7 @@ RUN pip install --upgrade pip
 RUN pip install gunicorn
 ADD ./requirements.txt /app/
 RUN pip install -r requirements.txt
+RUN pip install django-cors-headers
 
 ADD ./backend /app/backend
 ADD ./backend/docker /app/docker

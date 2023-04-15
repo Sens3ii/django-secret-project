@@ -12,8 +12,8 @@ services:
     server:
         restart: unless-stopped
         build:
-            context: .
-            dockerfile: ./docker/backend/Dockerfile
+            context: ../../ # context must include `requirements.txt`
+            dockerfile: ./backend/docker/backend/Dockerfile
         entrypoint: /app/docker/backend/server-entrypoint.sh
         volumes:
             - static_volume:/app/backend/django_static

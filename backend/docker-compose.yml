@@ -10,7 +10,7 @@ services:
             - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
             - static_volume:/app/backend/django_static
     server:
-        restart: unless-stopped
+        restart: always
         build:
             context: ../ # context must include `requirements.txt`
             dockerfile: ./backend/docker/backend/Dockerfile
@@ -57,7 +57,7 @@ services:
             - 6379
     db:
         image: postgres:13.0-alpine
-        restart: unless-stopped
+        restart: always
         volumes:
             - postgres_data:/var/lib/postgresql/data/
         environment:
@@ -66,7 +66,11 @@ services:
             POSTGRES_PASSWORD: postgres
         expose:
             - 5432
+        ports:
+            - "5432:5432"
 
 volumes:
     static_volume: {}
     postgres_data: {}
+    db:
+        driver: local

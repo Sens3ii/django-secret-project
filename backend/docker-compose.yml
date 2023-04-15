@@ -18,7 +18,7 @@ services:
         volumes:
             - static_volume:/app/backend/django_static
         expose:
-            - 8000
+            - 8000:8888
         environment:
             DEBUG: "True"
             CELERY_BROKER_URL: "redis://redis:6379/0"

@@ -1,6 +1,6 @@
-FROM python:3.9
+FROM python:3.8.15-alpine
 
-RUN apt update && apt add python3-dev gcc libc-dev
+RUN apk update && apk add python3-dev gcc libc-dev
 
 WORKDIR /app
 

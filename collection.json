@@ -1,0 +1,683 @@
+{
+	"info": {
+		"_postman_id": "4eb00a28-ab31-47d8-a363-5074c5ca273e",
+		"name": "HackNU",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "19646785"
+	},
+	"item": [
+		{
+			"name": "supply",
+			"item": [
+				{
+					"name": "Get supplies",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"pm.collectionVariables.set(\"supplyProductBarcode\", pm.response.json()[0].barcode);\r",
+									"pm.collectionVariables.set(\"supplyProductPrice\", pm.response.json()[0].price);\r",
+									"pm.collectionVariables.set(\"supplyProductQuantity\", pm.response.json()[0].quantity);\r",
+									"console.log(pm.response.json()[0].id);\r",
+									"console.log(pm.response.json()[0].barcode);\r",
+									"console.log(pm.response.json()[0].price);\r",
+									"console.log(pm.response.json()[0].quantity);\r",
+									"console.log(pm.response.json()[0].supplyTime);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"let tstamp = (new Date()).getTime();\r",
+									"let date = new Date(tstamp);\r",
+									"let date_format_str = date.getFullYear().toString()+\"-\"+((date.getMonth()+1).toString().length==2?(date.getMonth()+1).toString():\"0\"+(date.getMonth()+1).toString())+\"-\"+(date.getDate().toString().length==2?date.getDate().toString():\"0\"+date.getDate().toString())+\" \"+(date.getHours().toString().length==2?date.getHours().toString():\"0\"+date.getHours().toString())+\":\"+((parseInt(date.getMinutes()/5)*5).toString().length==2?(parseInt(date.getMinutes()/5)*5).toString():\"0\"+(parseInt(date.getMinutes()/5)*5).toString())+\":00\";\r",
+									"\r",
+									"let min = 60000;\r",
+									"let day = min * 1440;\r",
+									"let years3 = (3*365)*day;\r",
+									"let beforeTstamp = tstamp-years3;\r",
+									"let beforeDate = new Date(beforeTstamp);\r",
+									"let date_format_str_before = beforeDate.getFullYear().toString()+\"-\"+((beforeDate.getMonth()+1).toString().length==2?(beforeDate.getMonth()+1).toString():\"0\"+(beforeDate.getMonth()+1).toString())+\"-\"+(beforeDate.getDate().toString().length==2?beforeDate.getDate().toString():\"0\"+beforeDate.getDate().toString())+\" \"+(beforeDate.getHours().toString().length==2?beforeDate.getHours().toString():\"0\"+beforeDate.getHours().toString())+\":\"+((parseInt(beforeDate.getMinutes()/5)*5).toString().length==2?(parseInt(beforeDate.getMinutes()/5)*5).toString():\"0\"+(parseInt(beforeDate.getMinutes()/5)*5).toString())+\":00\";\r",
+									"\r",
+									"pm.collectionVariables.set(\"beforeDate\", date_format_str_before)\r",
+									"pm.collectionVariables.set(\"currentDate\", date_format_str);\r",
+									"console.log(date_format_str);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/supplies",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"supplies"
+							],
+							"query": [
+								{
+									"key": "fromTime",
+									"value": "{{beforeDate}}",
+									"disabled": true
+								},
+								{
+									"key": "toTime",
+									"value": "{{currentDate}}",
+									"disabled": true
+								},
+								{
+									"key": "barcode",
+									"value": "{{barcode}}",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Supply",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"console.log(pm.response.json().id);\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"pm.collectionVariables.set(\"supplyId\", pm.response.json().id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"barcode\": {{supplyProductBarcode}},\r\n    \"price\": {{supplyProductPrice}},\r\n    \"quantity\": {{supplyProductQuantity}},\r\n    \"supplyTime\": \"{{currentDate}}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/supplies",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"supplies"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Supply by ID",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"console.log(pm.response.json().id);\r",
+									"console.log(pm.response.json().barcode);\r",
+									"console.log(pm.response.json().price);\r",
+									"console.log(pm.response.json().quantity);\r",
+									"console.log(pm.response.json().supplyTime);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{base_url}}/api/supplies/{{supplyId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"supplies",
+								"{{supplyId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Edit Supply",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"barcode\": {{supplyProductBarcode}},\r\n    \"price\": {{supplyProductPrice}},\r\n    \"quantity\": {{supplyProductQuantity}},\r\n    \"supplyTime\": \"{{currentDate}}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/supplies/{{supplyId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"supplies",
+								"{{supplyId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Supply",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/supplies/{{supplyId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"supplies",
+								"{{supplyId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "sale",
+			"item": [
+				{
+					"name": "Create sale",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"console.log(pm.response.json().id);\r",
+									"pm.collectionVariables.set(\"saleId\", pm.response.json().id);\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"barcode\": {{barcode}},\r\n    \"price\": 150,\r\n    \"quantity\": 5,\r\n    \"saleTime\": \"2022-04-01 10:00:00\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/sales",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"sales"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get sales",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"let tstamp = (new Date()).getTime();\r",
+									"let date = new Date(tstamp);\r",
+									"let date_format_str = date.getFullYear().toString()+\"-\"+((date.getMonth()+1).toString().length==2?(date.getMonth()+1).toString():\"0\"+(date.getMonth()+1).toString())+\"-\"+(date.getDate().toString().length==2?date.getDate().toString():\"0\"+date.getDate().toString())+\" \"+(date.getHours().toString().length==2?date.getHours().toString():\"0\"+date.getHours().toString())+\":\"+((parseInt(date.getMinutes()/5)*5).toString().length==2?(parseInt(date.getMinutes()/5)*5).toString():\"0\"+(parseInt(date.getMinutes()/5)*5).toString())+\":00\";\r",
+									"\r",
+									"let min = 60000;\r",
+									"let day = min * 1440;\r",
+									"let years3 = (3*365)*day;\r",
+									"let beforeTstamp = tstamp-years3;\r",
+									"let beforeDate = new Date(beforeTstamp);\r",
+									"let date_format_str_before = beforeDate.getFullYear().toString()+\"-\"+((beforeDate.getMonth()+1).toString().length==2?(beforeDate.getMonth()+1).toString():\"0\"+(beforeDate.getMonth()+1).toString())+\"-\"+(beforeDate.getDate().toString().length==2?beforeDate.getDate().toString():\"0\"+beforeDate.getDate().toString())+\" \"+(beforeDate.getHours().toString().length==2?beforeDate.getHours().toString():\"0\"+beforeDate.getHours().toString())+\":\"+((parseInt(beforeDate.getMinutes()/5)*5).toString().length==2?(parseInt(beforeDate.getMinutes()/5)*5).toString():\"0\"+(parseInt(beforeDate.getMinutes()/5)*5).toString())+\":00\";\r",
+									"pm.collectionVariables.set(\"beforeDate\", date_format_str_before)\r",
+									"pm.collectionVariables.set(\"currentDate\", date_format_str);\r",
+									"console.log(pm.collectionVariables.get(\"currentDate\"));\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"pm.collectionVariables.set(\"saleProductBarcode\", pm.response.json()[0].barcode);\r",
+									"pm.collectionVariables.set(\"saleProductPrice\", pm.response.json()[0].price);\r",
+									"pm.collectionVariables.set(\"saleProductQuantity\", pm.response.json()[0].quantity);\r",
+									"\r",
+									"console.log(pm.response.json()[0].id);\r",
+									"console.log(pm.response.json()[0].barcode);\r",
+									"console.log(pm.response.json()[0].price);\r",
+									"console.log(pm.response.json()[0].quantity);\r",
+									"console.log(pm.response.json()[0].saleTime);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/sales?fromTime={{beforeDate}}&toTime={{currentDate}}&barcode={{barcode}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"sales"
+							],
+							"query": [
+								{
+									"key": "fromTime",
+									"value": "{{beforeDate}}"
+								},
+								{
+									"key": "toTime",
+									"value": "{{currentDate}}"
+								},
+								{
+									"key": "barcode",
+									"value": "{{barcode}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get sale by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"console.log(pm.response.json().id);\r",
+									"console.log(pm.response.json().barcode);\r",
+									"console.log(pm.response.json().price);\r",
+									"console.log(pm.response.json().quantity);\r",
+									"console.log(pm.response.json().saleTime);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/sales/{{saleId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"sales",
+								"{{saleId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update sale",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"barcode\": {{saleProductBarcode}},\r\n    \"price\": {{saleProductPrice}},\r\n    \"quantity\": {{saleProductQuantity}},\r\n    \"saleTime\": \"{{currentDate}}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/sales/{{saleId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"sales",
+								"{{saleId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Sale",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/sales/{{saleId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"sales",
+								"{{saleId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "reports",
+			"item": [
+				{
+					"name": "Get report",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"console.log(pm.response.json().barcode);\r",
+									"console.log(pm.response.json().quantity);\r",
+									"console.log(pm.response.json().revenue);\r",
+									"console.log(pm.response.json().netProfit);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"let tstamp = (new Date()).getTime();\r",
+									"let date = new Date(tstamp);\r",
+									"let date_format_str = date.getFullYear().toString()+\"-\"+((date.getMonth()+1).toString().length==2?(date.getMonth()+1).toString():\"0\"+(date.getMonth()+1).toString())+\"-\"+(date.getDate().toString().length==2?date.getDate().toString():\"0\"+date.getDate().toString())+\" \"+(date.getHours().toString().length==2?date.getHours().toString():\"0\"+date.getHours().toString())+\":\"+((parseInt(date.getMinutes()/5)*5).toString().length==2?(parseInt(date.getMinutes()/5)*5).toString():\"0\"+(parseInt(date.getMinutes()/5)*5).toString())+\":00\";\r",
+									"\r",
+									"let min = 60000;\r",
+									"let day = min * 1440;\r",
+									"let years3 = (3*365)*day;\r",
+									"let beforeTstamp = tstamp-years3;\r",
+									"let beforeDate = new Date(beforeTstamp);\r",
+									"let date_format_str_before = beforeDate.getFullYear().toString()+\"-\"+((beforeDate.getMonth()+1).toString().length==2?(beforeDate.getMonth()+1).toString():\"0\"+(beforeDate.getMonth()+1).toString())+\"-\"+(beforeDate.getDate().toString().length==2?beforeDate.getDate().toString():\"0\"+beforeDate.getDate().toString())+\" \"+(beforeDate.getHours().toString().length==2?beforeDate.getHours().toString():\"0\"+beforeDate.getHours().toString())+\":\"+((parseInt(beforeDate.getMinutes()/5)*5).toString().length==2?(parseInt(beforeDate.getMinutes()/5)*5).toString():\"0\"+(parseInt(beforeDate.getMinutes()/5)*5).toString())+\":00\";\r",
+									"\r",
+									"pm.collectionVariables.set(\"beforeDate\", date_format_str_before)\r",
+									"pm.collectionVariables.set(\"currentDate\", date_format_str);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/reports?fromTime={{beforeDate}}&toTime={{currentDate}}&barcode={{barcode}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"reports"
+							],
+							"query": [
+								{
+									"key": "fromTime",
+									"value": "{{beforeDate}}"
+								},
+								{
+									"key": "toTime",
+									"value": "{{currentDate}}"
+								},
+								{
+									"key": "barcode",
+									"value": "{{barcode}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"/*",
+					"Создайте локальную переменную в Collection Vaiables под названием \"base_url\", ",
+					"и в поле \"Current value\" прописываете свой URL для автоматической замены во всех рестах.",
+					"Таким образом вам не нужно отдельно в каждом rest-e прописывать ссылку на собственный URL.",
+					"*/"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "barcode",
+			"value": "12334565",
+			"type": "string"
+		},
+		{
+			"key": "base_url",
+			"value": "localhost:8088",
+			"type": "string"
+		},
+		{
+			"key": "beforeDate",
+			"value": ""
+		},
+		{
+			"key": "currentDate",
+			"value": ""
+		},
+		{
+			"key": "supplyProductBarcode",
+			"value": ""
+		},
+		{
+			"key": "supplyProductPrice",
+			"value": ""
+		},
+		{
+			"key": "supplyProductQuantity",
+			"value": ""
+		},
+		{
+			"key": "supplyId",
+			"value": ""
+		},
+		{
+			"key": "saleId",
+			"value": ""
+		},
+		{
+			"key": "saleProductBarcode",
+			"value": ""
+		},
+		{
+			"key": "saleProductPrice",
+			"value": ""
+		},
+		{
+			"key": "saleProductQuantity",
+			"value": ""
+		}
+	]
+}

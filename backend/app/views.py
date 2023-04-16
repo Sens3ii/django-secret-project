@@ -128,7 +128,7 @@ class SaleViewSet(viewsets.ModelViewSet):
         else:
             new_sale(serializer.instance)
         headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_200_OK, headers=headers)
+        return JsonResponse({'id': serializer.instance.id}, status=status.HTTP_200_OK, headers=headers)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -185,7 +185,7 @@ class SupplyViewSet(viewsets.ModelViewSet):
         else:
             new_supply(serializer.instance)
         headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_200_OK, headers=headers)
+        return JsonResponse({'id': serializer.instance.id}, status=status.HTTP_200_OK, headers=headers)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()

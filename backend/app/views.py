@@ -25,10 +25,9 @@ def make_kwargs(barcode, from_time, to_time, is_sale):
     return kwargs
 
 
-def recalculate(sales, supplies, supply_avail_q=0):
+def recalculate(sales, supplies, supply_avail_q=0, prev_sale=None):
     upd_sales = []
     supply = None
-    prev_sale = None
     for sale in sales:
         matched = False
         sale.total_net_profit = prev_sale.total_net_profit if prev_sale else 0
@@ -37,25 +36,27 @@ def recalculate(sales, supplies, supply_avail_q=0):
         sale_q = sale.quantity
         while not matched:
             try:
+                if supply is None and supply_avail_q:
+                    supply = next(supplies)
                 if not supply_avail_q:
                     supply = next(supplies)
                     supply_avail_q = supply.quantity
             except StopIteration:
                 break
+            q_update = min(sale_q, supply_avail_q)
             if sale_q <= supply_avail_q:
                 matched = True
                 sale.last_connected_supply = supply
                 sale.last_connected_supply_remaining_q = supply_avail_q - q_update
-            q_update = min(sale_q, supply_avail_q)
             sale_q -= q_update
             supply_avail_q -= q_update
             sale.total_net_profit += (sale.price - supply.price) * q_update
             sale.total_revenue += sale.price * q_update
             sale.total_quantity += q_update
-        # if not matched:
-        #     sale.total_revenue += sale.price * sale_q
-        #     sale.total_net_profit += sale.price * sale_q
-        #     sale.total_net_profit += sale.price * sale_q
+        if not matched:
+            sale.total_revenue += sale.price * sale_q
+            sale.total_net_profit += sale.price * sale_q
+            sale.total_quantity += sale_q
         prev_sale = sale
         upd_sales.append(sale)
         if len(upd_sales) > 1000:
@@ -115,15 +116,15 @@ class SaleViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        max_sale_time = Sale.objects.all().aggregate(Max('sale_time'))['sale_time__max']
+        max_sale_time = Sale.objects.filter(barcode=serializer.validated_data['barcode']).aggregate(Max('sale_time'))['sale_time__max']
         self.perform_create(serializer)
         if max_sale_time is not None and max_sale_time <= serializer.instance.sale_time:
-            sale = Sale.objects.get(Sale.objects.filter(sale_time=max_sale_time).aggregate(Max('id'))['id'])
+            sale = Sale.objects.get(id=Sale.objects.filter(sale_time=max_sale_time).aggregate(Max('id'))['id__max'])
             if sale.last_connected_supply:   
                 supplies = get_supplies(serializer.instance.barcode, sale.last_connected_supply)
-                recalculate([serializer.instance], supplies, sale.last_connected_supply_remaining_q)
-            # else:
-            #     recalculate([serializer.instance], [])
+                recalculate([serializer.instance], supplies, sale.last_connected_supply_remaining_q, sale)
+            else:
+                recalculate([serializer.instance], iter(()), prev_sale=sale)
         else:
             new_sale(serializer.instance)
         headers = self.get_success_headers(serializer.data)
@@ -177,8 +178,8 @@ class SupplyViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        max_sale_time = Sale.objects.all().aggregate(Max('sale_time'))['sale_time__max']
         self.perform_create(serializer)
+        max_sale_time = Sale.objects.filter(barcode=serializer.instance.barcode).aggregate(Max('sale_time'))['sale_time__max']
         if max_sale_time is not None and max_sale_time < serializer.instance.supply_time:
             pass
         else:

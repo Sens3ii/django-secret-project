@@ -52,6 +52,10 @@ def recalculate(sales, supplies, supply_avail_q=0):
             sale.total_net_profit += (sale.price - supply.price) * q_update
             sale.total_revenue += sale.price * q_update
             sale.total_quantity += q_update
+        # if not matched:
+        #     sale.total_revenue += sale.price * sale_q
+        #     sale.total_net_profit += sale.price * sale_q
+        #     sale.total_net_profit += sale.price * sale_q
         prev_sale = sale
         upd_sales.append(sale)
         if len(upd_sales) > 1000:
@@ -113,11 +117,13 @@ class SaleViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         max_sale_time = Sale.objects.all().aggregate(Max('sale_time'))['sale_time__max']
         self.perform_create(serializer)
-        if max_sale_time is not None or max_sale_time <= serializer.instance.sale_time:
+        if max_sale_time is not None and max_sale_time <= serializer.instance.sale_time:
             sale = Sale.objects.get(Sale.objects.filter(sale_time=max_sale_time).aggregate(Max('id'))['id'])
             if sale.last_connected_supply:   
                 supplies = get_supplies(serializer.instance.barcode, sale.last_connected_supply)
                 recalculate([serializer.instance], supplies, sale.last_connected_supply_remaining_q)
+            # else:
+            #     recalculate([serializer.instance], [])
         else:
             new_sale(serializer.instance)
         headers = self.get_success_headers(serializer.data)
@@ -173,7 +179,7 @@ class SupplyViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         max_sale_time = Sale.objects.all().aggregate(Max('sale_time'))['sale_time__max']
         self.perform_create(serializer)
-        if max_sale_time is not None or max_sale_time < serializer.instance.supply_time:
+        if max_sale_time is not None and max_sale_time < serializer.instance.supply_time:
             pass
         else:
             new_supply(serializer.instance)

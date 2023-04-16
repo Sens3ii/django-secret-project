@@ -28,7 +28,6 @@ def make_kwargs(barcode, from_time, to_time, is_sale):
 def recalculate(sales, supplies, supply_avail_q=0):
     upd_sales = []
     supply = None
-    # supply_avail_q = 0
     prev_sale = None
     for sale in sales:
         matched = False
@@ -58,16 +57,18 @@ def recalculate(sales, supplies, supply_avail_q=0):
         if len(upd_sales) > 1000:
             Sale.objects.bulk_update(upd_sales, fields=[
                 'total_net_profit',
-                'total_net_profit',
                 'total_quantity',
                 'total_revenue',
+                'last_connected_supply',
+                'last_connected_supply_remaining_q'
             ])
             upd_sales = []
     Sale.objects.bulk_update(upd_sales, fields=[
         'total_net_profit',
-        'total_net_profit',
         'total_quantity',
         'total_revenue',
+        'last_connected_supply',
+        'last_connected_supply_remaining_q'
     ])
 
 

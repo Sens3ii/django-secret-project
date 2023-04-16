@@ -1,4 +1,4 @@
-from django.db.models import Max
+from django.db.models import Max, Q
 from django.http import JsonResponse
 from django.utils import timezone
 
@@ -8,6 +8,8 @@ from rest_framework.response import Response
 
 from .models import Sale, Supply
 from .serializers import SaleSerializer, SupplySerializer, SaleUpdateSerializer, SupplyUpdateSerializer
+
+UPDATE_DESTROY_STATUS = status.HTTP_200_OK
 
 
 def make_kwargs(barcode, from_time, to_time, is_sale):
@@ -23,10 +25,10 @@ def make_kwargs(barcode, from_time, to_time, is_sale):
     return kwargs
 
 
-def recalculate(sales, supplies, fm, fmq):
+def recalculate(sales, supplies, supply_avail_q=0):
     upd_sales = []
     supply = None
-    supply_avail_q = 0
+    # supply_avail_q = 0
     prev_sale = None
     for sale in sales:
         matched = False
@@ -43,6 +45,8 @@ def recalculate(sales, supplies, fm, fmq):
                 break
             if sale_q <= supply_avail_q:
                 matched = True
+                sale.last_connected_supply = supply
+                sale.last_connected_supply_remaining_q = supply_avail_q - q_update
             q_update = min(sale_q, supply_avail_q)
             sale_q -= q_update
             supply_avail_q -= q_update
@@ -73,19 +77,24 @@ def get_sales(barcode):
     return all_sales
 
 
-def get_supplies(barcode):
+def get_supplies(barcode, first_supply=None):
+    if first_supply:
+        return Supply.objects.filter(
+            Q(supply_time__gt=first_supply.supply_time) | Q(supply_time=first_supply.supply_time, id__gte=first_supply.id),
+            barcode=barcode
+        ).order_by('supply_time', 'id').iterator(chunk_size=1000)
     all_supplies = Supply.objects.filter(barcode=barcode).order_by('supply_time', 'id') \
         .iterator(chunk_size=1000)
     return all_supplies
 
 
 def new_supply(new_sup):
-    recalculate(get_sales(new_sup.barcode), get_supplies(new_sup.barcode), None, None)
+    recalculate(get_sales(new_sup.barcode), get_supplies(new_sup.barcode))
 
 
 
 def new_sale(new_sale_):
-    recalculate(get_sales(new_sale_.barcode), get_supplies(new_sale_.barcode), None, None)
+    recalculate(get_sales(new_sale_.barcode), get_supplies(new_sale_.barcode))
 
 
 class SaleViewSet(viewsets.ModelViewSet):
@@ -101,16 +110,23 @@ class SaleViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        max_sale_time = Sale.objects.all().aggregate(Max('sale_time'))['sale_time__max']
         self.perform_create(serializer)
+        if max_sale_time is not None or max_sale_time <= serializer.instance.sale_time:
+            sale = Sale.objects.get(Sale.objects.filter(sale_time=max_sale_time).aggregate(Max('id'))['id'])
+            if sale.last_connected_supply:   
+                supplies = get_supplies(serializer.instance.barcode, sale.last_connected_supply)
+                recalculate([serializer.instance], supplies, sale.last_connected_supply_remaining_q)
+        else:
+            new_sale(serializer.instance)
         headers = self.get_success_headers(serializer.data)
-        new_sale(serializer.instance)
         return Response(serializer.data, status=status.HTTP_200_OK, headers=headers)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         self.perform_destroy(instance)
-        recalculate(get_sales(instance.barcode), get_supplies(instance.barcode), None, None)
-        return Response(status=status.HTTP_200_OK)
+        recalculate(get_sales(instance.barcode), get_supplies(instance.barcode))
+        return Response(status=UPDATE_DESTROY_STATUS)
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
@@ -122,9 +138,9 @@ class SaleViewSet(viewsets.ModelViewSet):
         if getattr(instance, '_prefetched_objects_cache', None):
             instance._prefetched_objects_cache = {}
 
-        recalculate(get_sales(instance.barcode), get_supplies(instance.barcode), None, None)
+        recalculate(get_sales(instance.barcode), get_supplies(instance.barcode))
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(status=UPDATE_DESTROY_STATUS)
 
     def list(self, request, *args, **kwargs):
         barcode = request.query_params.get('barcode')
@@ -154,16 +170,20 @@ class SupplyViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        max_sale_time = Sale.objects.all().aggregate(Max('sale_time'))['sale_time__max']
         self.perform_create(serializer)
+        if max_sale_time is not None or max_sale_time < serializer.instance.sale_time:
+            pass
+        else:
+            new_supply(serializer.instance)
         headers = self.get_success_headers(serializer.data)
-        new_supply(serializer.instance)
         return Response(serializer.data, status=status.HTTP_200_OK, headers=headers)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         self.perform_destroy(instance)
-        recalculate(get_sales(instance.barcode), get_supplies(instance.barcode), None, None)
-        return Response(status=status.HTTP_200_OK)
+        recalculate(get_sales(instance.barcode), get_supplies(instance.barcode))
+        return Response(status=UPDATE_DESTROY_STATUS)
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
@@ -175,9 +195,9 @@ class SupplyViewSet(viewsets.ModelViewSet):
         if getattr(instance, '_prefetched_objects_cache', None):
             instance._prefetched_objects_cache = {}
 
-        recalculate(get_sales(instance.barcode), get_supplies(instance.barcode), None, None)
+        recalculate(get_sales(instance.barcode), get_supplies(instance.barcode))
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(status=UPDATE_DESTROY_STATUS)
 
     def list(self, request, *args, **kwargs):
         barcode = request.query_params.get('barcode')

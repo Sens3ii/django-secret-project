@@ -10,6 +10,8 @@ class Sale(models.Model):
     total_net_profit = models.BigIntegerField(default=0)
     total_revenue = models.BigIntegerField(default=0)
     total_quantity = models.BigIntegerField(default=0)
+    last_connected_supply = models.ForeignKey('Supply', on_delete=models.DO_NOTHING, blank=True, null=True)
+    last_connected_supply_remaining_q = models.IntegerField(null=True)
 
     class Meta:
         indexes = [

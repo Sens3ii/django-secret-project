@@ -173,7 +173,7 @@ class SupplyViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         max_sale_time = Sale.objects.all().aggregate(Max('sale_time'))['sale_time__max']
         self.perform_create(serializer)
-        if max_sale_time is not None or max_sale_time < serializer.instance.sale_time:
+        if max_sale_time is not None or max_sale_time < serializer.instance.supply_time:
             pass
         else:
             new_supply(serializer.instance)

@@ -57,6 +57,9 @@ def recalculate(sales, supplies, supply_avail_q=0, prev_sale=None):
             sale.total_revenue += sale.price * sale_q
             sale.total_net_profit += sale.price * sale_q
             sale.total_quantity += sale_q
+        if prev_sale:
+            prev_sale.last_connected_supply = None
+            prev_sale.last_connected_supply_remaining_q = None
         prev_sale = sale
         upd_sales.append(sale)
         if len(upd_sales) > 1000:
